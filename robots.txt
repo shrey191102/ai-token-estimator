@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ai-token-estimator.pages.dev/sitemap.xml
