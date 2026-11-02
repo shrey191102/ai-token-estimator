@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Token Cost & Context Window Estimator | Free Developer Tool</title>
+    
+    <!-- Immediate Theme Init Script to prevent light flash on load -->
+    <script>
+        (function() {
+            try {
+                var storedTheme = localStorage.getItem('tokencost_theme');
+                if (storedTheme === 'dark' || (!storedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {}
+        })();
+    </script>
+
+    <!-- Primary SEO Metadata -->
+    <meta name="description" content="Calculate accurate token counts and estimate real-time API costs across OpenAI, Anthropic Claude, Google Gemini, and DeepSeek models. Upload documents, estimate context usage, and plan batch costs.">
+    <meta name="keywords" content="llm token cost calculator, gpt-4o token count, claude 3.5 sonnet pricing, gemini 2.0 flash context window, deepseek r1 token price, api cost estimator">
+    <meta name="author" content="TokenCost.ai">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="AI Model Token Cost & Context Window Estimator">
+    <meta property="og:description" content="Calculate accurate token counts, compare LLM API pricing, and estimate context window usage for OpenAI, Claude, Gemini, and DeepSeek.">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="AI Model Token Cost & Context Window Estimator">
+    <meta property="twitter:description" content="Free browser-based token calculator & LLM API cost estimator for developers and product teams.">
+
+    <!-- Structured Data (JSON-LD) - WebApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "AI Model Token Cost & Context Window Estimator",
+      "description": "Interactive developer utility to calculate exact token counts, document payload context limits, and projected multi-run production API costs for popular AI models.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <!-- Structured Data (JSON-LD) - FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How many characters equal one AI token?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "As a standard rule of thumb, 1 token is roughly equivalent to 4 characters or 0.75 words in standard English text. However, code, non-English text, and special symbols can vary significantly."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does this tool upload my text or document data to a server?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. TokenCost.ai executes all calculations and document parsing locally inside your web browser. No prompt text or uploaded documents leave your local device."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- External Libraries (CDNs) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#020617',
+                        cardBg: '#0f172a',
+                        cardBorder: '#1e293b',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Tiktoken Web Bundle (Browser UMD) -->
+    <script src="https://cdn.jsdelivr.net/npm/js-tiktoken@1.0.12/dist/single/cl100k_base.json" type="module"></script>
+    <!-- PDF.js for Client-Side PDF Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <!-- Google Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        html, body {
+            min-height: 100%;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        
+        /* Enforce Absolute Slate-950 Dark Theme */
+        html.dark, html.dark body {
+            background-color: #020617 !important;
+            color: #f8fafc !important;
+            color-scheme: dark;
+        }
+        
+        html:not(.dark), html:not(.dark) body {
+            background-color: #f8fafc !important;
+            color: #0f172a !important;
+            color-scheme: light;
+        }
+
+        /* Custom Webkit Scrollbars */
+        html.dark ::-webkit-scrollbar { width: 6px; height: 6px; }
+        html.dark ::-webkit-scrollbar-track { background: #020617; }
+        html.dark ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+        
+        html:not(.dark) ::-webkit-scrollbar { width: 6px; height: 6px; }
+        html:not(.dark) ::-webkit-scrollbar-track { background: #f8fafc; }
+        html:not(.dark) ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        
+        .glass-card {
+            transition: all 0.2s ease-in-out;
+        }
+        html.dark .glass-card {
+            background-color: #0f172a;
+            border: 1px solid #1e293b;
+        }
+        html:not(.dark) .glass-card {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .drag-over {
+            border-color: #3b82f6 !important;
+            background: rgba(59, 130, 246, 0.1) !important;
+        }
+
+        /* Native Select Options Styling for Dark Mode */
+        html.dark select, html.dark select option {
+            background-color: #0f172a !important;
+            color: #f8fafc !important;
+        }
+        html:not(.dark) select, html:not(.dark) select option {
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-blue-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="border-b dark:border-slate-800 border-slate-200 dark:bg-slate-900 bg-white sticky top-0 z-40 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 rounded-xl shadow-md">
+                    <i data-lucide="cpu" class="w-5 h-5 text-white"></i>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-lg font-bold tracking-tight dark:text-white text-slate-900">TokenCost<span class="text-blue-500">.ai</span></h1>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-blue-500/10 text-blue-500 dark:text-blue-400 border border-blue-500/20">2026 Models</span>
+                    </div>
+                    <p class="text-xs dark:text-slate-400 text-slate-500 hidden sm:block">Production AI Model Token & Cost Estimator</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-2.5">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggleBtn" onclick="toggleTheme()" class="p-2 rounded-xl dark:bg-slate-800 bg-slate-100 hover:opacity-80 transition text-slate-700 dark:text-slate-200 border dark:border-slate-700 border-slate-300 flex items-center justify-center cursor-pointer" title="Toggle Light/Dark Theme">
+                    <i data-lucide="sun" class="w-4 h-4 hidden dark:block text-amber-400"></i>
+                    <i data-lucide="moon" class="w-4 h-4 block dark:hidden text-slate-700"></i>
+                </button>
+
+                <!-- Export Report Button -->
+                <button onclick="exportReport('json')" class="text-xs dark:bg-slate-800 bg-slate-100 dark:text-slate-200 text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium px-3 py-2 rounded-xl border dark:border-slate-700 border-slate-300 transition flex items-center space-x-1.5">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-blue-500 dark:text-blue-400"></i>
+                    <span class="hidden sm:inline">Export JSON</span>
+                </button>
+
+                <!-- Share Link Button -->
+                <button onclick="copyShareableLink()" class="text-xs bg-blue-600 hover:bg-blue-500 text-white font-medium px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 shadow-md shadow-blue-500/20">
+                    <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                    <span>Share</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full space-y-6">
+        
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center space-x-2 bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-2xl">
+            <i data-lucide="check-circle" class="w-5 h-5"></i>
+            <span id="toastMessage" class="text-sm font-medium">Copied to clipboard!</span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Left Workspace: Input & File Parser (7 Cols) -->
+            <div class="lg:col-span-7 space-y-5">
+                
+                <!-- Preset Toolbar -->
+                <div class="glass-card p-4 rounded-2xl">
+                    <div class="flex justify-between items-center mb-2.5">
+                        <label class="text-xs font-semibold uppercase tracking-wider dark:text-slate-300 text-slate-600 flex items-center space-x-1.5">
+                            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400"></i>
+                            <span>Sample Prompt Presets</span>
+                        </label>
+                        <span id="tokenizerEngineBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+                            Tiktoken Native
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button onclick="loadPreset('short')" class="px-3 py-2 text-xs rounded-xl dark:bg-slate-800/80 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-left border dark:border-slate-700/60 border-slate-200 transition">
+                            <div class="font-semibold dark:text-white text-slate-800">Short Prompt</div>
+                            <div class="text-[10px] dark:text-slate-400 text-slate-500">~100 tokens</div>
+                        </button>
+                        <button onclick="loadPreset('article')" class="px-3 py-2 text-xs rounded-xl dark:bg-slate-800/80 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-left border dark:border-slate-700/60 border-slate-200 transition">
+                            <div class="font-semibold dark:text-white text-slate-800">Tech Article</div>
+                            <div class="text-[10px] dark:text-slate-400 text-slate-500">~1.5k tokens</div>
+                        </button>
+                        <button onclick="loadPreset('codebase')" class="px-3 py-2 text-xs rounded-xl dark:bg-slate-800/80 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-left border dark:border-slate-700/60 border-slate-200 transition">
+                            <div class="font-semibold dark:text-white text-slate-800">Source Code</div>
+                            <div class="text-[10px] dark:text-slate-400 text-slate-500">~10k tokens</div>
+                        </button>
+                        <button onclick="loadPreset('book')" class="px-3 py-2 text-xs rounded-xl dark:bg-slate-800/80 bg-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 text-left border dark:border-slate-700/60 border-slate-200 transition">
+                            <div class="font-semibold dark:text-white text-slate-800">Large Document</div>
+                            <div class="text-[10px] dark:text-slate-400 text-slate-500">~100k tokens</div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Textarea & File Parsing Area -->
+                <div class="glass-card p-5 rounded-2xl space-y-4">
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm font-semibold flex items-center space-x-2 dark:text-white text-slate-900">
+                            <i data-lucide="file-text" class="w-4 h-4 text-blue-500 dark:text-blue-400"></i>
+                            <span>Prompt Content / Document Text</span>
+                        </label>
+                        <div class="flex items-center space-x-3 text-xs dark:text-slate-300 text-slate-600">
+                            <span>Chars: <strong id="charCount" class="dark:text-white text-slate-900 font-mono">0</strong></span>
+                            <span>Words: <strong id="wordCount" class="dark:text-white text-slate-900 font-mono">0</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- File Drag-and-Drop Area -->
+                    <div id="dropZone" class="border-2 border-dashed dark:border-slate-800 border-slate-300 rounded-xl p-3 text-center transition cursor-pointer hover:border-blue-500/50 relative dark:bg-slate-900/50 bg-slate-50"
+                         onclick="document.getElementById('fileInput').click()"
+                         ondragover="handleDragOver(event)"
+                         ondragleave="handleDragLeave(event)"
+                         ondrop="handleFileDrop(event)">
+                        <input type="file" id="fileInput" class="hidden" accept=".txt,.json,.md,.csv,.pdf" onchange="handleFileSelect(event)">
+                        <div class="flex items-center justify-center space-x-2 text-xs dark:text-slate-300 text-slate-600 font-medium">
+                            <i data-lucide="upload-cloud" class="w-4 h-4 text-blue-500 dark:text-blue-400"></i>
+                            <span>Drop <strong>TXT, JSON, MD, CSV, or PDF</strong> files here or click to browse</span>
+                        </div>
+                    </div>
+
+                    <!-- Text Input area -->
+                    <textarea id="promptInput" rows="7" placeholder="Paste text or code here to measure token metrics live..."
+                        class="w-full dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-300 dark:text-slate-100 text-slate-900 dark:placeholder-slate-500 placeholder-slate-400 rounded-xl p-3.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition resize-y"
+                        oninput="onTextInput()"></textarea>
+
+                    <!-- Manual Overrides & Outputs -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="dark:bg-slate-900 bg-slate-100 p-3 rounded-xl border dark:border-slate-800 border-slate-200">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs dark:text-slate-300 text-slate-600 font-medium">Input Tokens (Calculated/Override)</label>
+                                <span class="text-[10px] text-blue-600 dark:text-blue-400 cursor-pointer hover:underline font-semibold" onclick="onTextInput()">Recalculate</span>
+                            </div>
+                            <input type="number" id="inputTokenOverride" value="0" min="0" oninput="onManualTokenInput()"
+                                class="w-full dark:bg-slate-950 bg-white border dark:border-slate-800 border-slate-300 dark:text-white text-slate-900 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+
+                        <div class="dark:bg-slate-900 bg-slate-100 p-3 rounded-xl border dark:border-slate-800 border-slate-200">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs dark:text-slate-300 text-slate-600 font-medium">Expected Output Tokens</label>
+                                <span class="text-[10px] dark:text-slate-400 text-slate-500">Completion length</span>
+                            </div>
+                            <input type="number" id="outputTokenInput" value="500" min="0" oninput="calculateAll()"
+                                class="w-full dark:bg-slate-950 bg-white border dark:border-slate-800 border-slate-300 dark:text-white text-slate-900 rounded-lg px-3 py-1.5 text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <!-- Multimodal Vision Attachments -->
+                    <div class="border-t dark:border-slate-800 border-slate-200 pt-3 flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex items-center space-x-2">
+                            <i data-lucide="image" class="w-4 h-4 text-purple-500 dark:text-purple-400"></i>
+                            <span class="text-xs font-semibold dark:text-slate-200 text-slate-700">Multimodal Vision Add-on:</span>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="flex items-center space-x-1.5 dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-300 px-2.5 py-1 rounded-lg">
+                                <span class="text-xs dark:text-slate-300 text-slate-600 font-medium">Images:</span>
+                                <input type="number" id="imageCount" value="0" min="0" max="100" oninput="calculateAll()"
+                                    class="w-12 bg-transparent text-xs text-center font-mono focus:outline-none dark:text-white text-slate-900 font-bold">
+                            </div>
+                            <span class="text-[11px] dark:text-slate-400 text-slate-500 font-medium">(~1,600 tokens/image avg)</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Workspace: Model Selection & Results Dashboard (5 Cols) -->
+            <div class="lg:col-span-5 space-y-5">
+                
+                <!-- Target Model Selector Card -->
+                <div class="glass-card p-5 rounded-2xl space-y-4">
+                    <label class="text-xs font-semibold uppercase tracking-wider dark:text-slate-300 text-slate-600 flex items-center space-x-2">
+                        <i data-lucide="layers" class="w-4 h-4 text-blue-500 dark:text-blue-400"></i>
+                        <span>Select Target AI Model</span>
+                    </label>
+
+                    <div class="relative">
+                        <select id="modelSelect" onchange="calculateAll()" 
+                            class="w-full dark:bg-slate-900 bg-white border dark:border-slate-800 border-slate-300 dark:text-white text-slate-900 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer">
+                            <!-- Populated via JS -->
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-400">
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+
+                    <!-- Specs Pill Matrix -->
+                    <div id="modelSpecs" class="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-200 p-2 rounded-xl">
+                            <div class="dark:text-slate-400 text-slate-500 text-[10px] font-medium">Context Limit</div>
+                            <div id="specContext" class="font-bold dark:text-slate-100 text-slate-800 mt-0.5">128k</div>
+                        </div>
+                        <div class="dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-200 p-2 rounded-xl">
+                            <div class="dark:text-slate-400 text-slate-500 text-[10px] font-medium">Input / 1M</div>
+                            <div id="specInputPrice" class="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">$2.50</div>
+                        </div>
+                        <div class="dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-200 p-2 rounded-xl">
+                            <div class="dark:text-slate-400 text-slate-500 text-[10px] font-medium">Output / 1M</div>
+                            <div id="specOutputPrice" class="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">$10.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Context Gauge Card -->
+                <div class="glass-card p-5 rounded-2xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-semibold uppercase tracking-wider dark:text-slate-300 text-slate-600 flex items-center space-x-1.5">
+                            <i data-lucide="gauge" class="w-4 h-4 text-purple-500 dark:text-purple-400"></i>
+                            <span>Context Window Gauge</span>
+                        </span>
+                        <span id="contextBadge" class="px-2 py-0.5 text-[11px] rounded-full font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            Safe Usage
+                        </span>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-xs font-mono mb-1.5">
+                            <span class="dark:text-slate-400 text-slate-600"><strong id="usedTokensText" class="dark:text-white text-slate-900">0</strong> / <span id="totalContextText">128,000</span> tokens</span>
+                            <span id="contextPercentText" class="text-blue-600 dark:text-blue-400 font-bold">0.0%</span>
+                        </div>
+                        <div class="w-full h-3 dark:bg-slate-900 bg-slate-200 rounded-full overflow-hidden p-0.5 border dark:border-slate-800 border-slate-300">
+                            <div id="contextProgressBar" class="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-400 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="contextStatusMessage" class="text-[11px] dark:text-slate-400 text-slate-500">Your prompt comfortably fits within this model's capacity limit.</p>
+                </div>
+
+                <!-- Single Request Cost Overview -->
+                <div class="glass-card p-5 rounded-2xl bg-gradient-to-br dark:from-slate-900 dark:to-slate-900/90 from-blue-50 to-purple-50 dark:border-slate-800 border-blue-500/20 space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">Single API Call Cost</span>
+                        <span class="text-xs dark:text-slate-400 text-slate-500 font-mono">USD ($)</span>
+                    </div>
+
+                    <div class="flex items-baseline space-x-2">
+                        <span id="singleRunCost" class="text-3xl sm:text-4xl font-extrabold font-mono dark:text-white text-slate-900">$0.000000</span>
+                    </div>
+
+                    <div class="border-t dark:border-slate-800 border-slate-300/80 pt-3 space-y-1.5 text-xs">
+                        <div class="flex justify-between dark:text-slate-300 text-slate-600 font-medium">
+                            <span>Input Cost (<span id="summaryInputTokenCount">0</span> tokens):</span>
+                            <span id="summaryInputCost" class="font-mono dark:text-slate-100 text-slate-900 font-semibold">$0.0000</span>
+                        </div>
+                        <div class="flex justify-between dark:text-slate-300 text-slate-600 font-medium">
+                            <span>Output Cost (<span id="summaryOutputTokenCount">500</span> tokens):</span>
+                            <span id="summaryOutputCost" class="font-mono dark:text-slate-100 text-slate-900 font-semibold">$0.0000</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Production Batch Scaling Calculator -->
+        <div class="glass-card p-6 rounded-2xl space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b dark:border-slate-800 border-slate-200 pb-3">
+                <div>
+                    <h2 class="text-base font-bold flex items-center space-x-2 dark:text-white text-slate-900">
+                        <i data-lucide="calculator" class="w-5 h-5 text-emerald-500 dark:text-emerald-400"></i>
+                        <span>Production Multi-Run Batch Estimator</span>
+                    </h2>
+                    <p class="text-xs dark:text-slate-400 text-slate-500">Project total operational cost when deploying this prompt configuration at scale.</p>
+                </div>
+                <div class="flex items-center space-x-2 dark:bg-slate-900 bg-slate-100 px-3 py-1.5 rounded-xl border dark:border-slate-800 border-slate-300">
+                    <span class="text-xs dark:text-slate-300 text-slate-600 font-medium">Custom Runs:</span>
+                    <input type="number" id="customBatchInput" value="5000" min="1" oninput="calculateAll()" 
+                        class="w-20 dark:bg-slate-950 bg-white border dark:border-slate-800 border-slate-300 dark:text-white text-slate-900 rounded px-2 py-0.5 text-xs font-mono focus:outline-none font-bold">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-200 p-4 rounded-xl space-y-1">
+                    <div class="text-xs font-semibold dark:text-slate-300 text-slate-600">1,000 Runs</div>
+                    <div id="cost1k" class="text-lg font-bold font-mono dark:text-white text-slate-900">$0.00</div>
+                    <div class="text-[10px] dark:text-slate-400 text-slate-500">API Calls</div>
+                </div>
+                <div class="dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-200 p-4 rounded-xl space-y-1">
+                    <div class="text-xs font-semibold dark:text-slate-300 text-slate-600">10,000 Runs</div>
+                    <div id="cost10k" class="text-lg font-bold font-mono dark:text-white text-slate-900">$0.00</div>
+                    <div class="text-[10px] dark:text-slate-400 text-slate-500">API Calls</div>
+                </div>
+                <div class="dark:bg-slate-900 bg-slate-100 border dark:border-slate-800 border-slate-200 p-4 rounded-xl space-y-1">
+                    <div class="text-xs font-semibold dark:text-slate-300 text-slate-600">100,000 Runs</div>
+                    <div id="cost100k" class="text-lg font-bold text-emerald-600 dark:text-emerald-400 font-mono">$0.00</div>
+                    <div class="text-[10px] dark:text-slate-400 text-slate-500">API Calls</div>
+                </div>
+                <div class="bg-gradient-to-br dark:from-slate-900 dark:to-slate-900/90 from-purple-100/70 to-blue-100/70 border dark:border-slate-800 border-purple-500/30 p-4 rounded-xl space-y-1">
+                    <div class="text-xs font-semibold text-purple-600 dark:text-purple-300 flex items-center justify-between">
+                        <span>Custom Batch</span>
+                        <span id="customBatchLabel" class="text-[10px] font-mono text-purple-600 dark:text-purple-400">(5k)</span>
+                    </div>
+                    <div id="costCustom" class="text-lg font-bold text-purple-700 dark:text-purple-200 font-mono">$0.00</div>
+                    <div class="text-[10px] text-purple-600/80 dark:text-purple-400/80 font-medium">Projected Expense</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Full Model Pricing Comparison Matrix -->
+        <div id="comparison" class="glass-card p-6 rounded-2xl space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-base font-bold flex items-center space-x-2 dark:text-white text-slate-900">
+                        <i data-lucide="table" class="w-5 h-5 text-blue-500 dark:text-blue-400"></i>
+                        <span>Side-by-Side Model Comparison Matrix</span>
+                    </h2>
+                    <p class="text-xs dark:text-slate-400 text-slate-500">Comparing current token metrics across flagship and lightweight LLMs.</p>
+                </div>
+                <div class="text-xs dark:text-slate-300 text-slate-600 font-mono dark:bg-slate-900 bg-slate-100 px-3 py-1.5 rounded-lg border dark:border-slate-800 border-slate-300">
+                    Input: <span id="matrixInputTokens" class="font-bold dark:text-white text-slate-900">0</span> tokens | Output: <span id="matrixOutputTokens" class="font-bold dark:text-white text-slate-900">500</span> tokens
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm border-collapse">
+                    <thead>
+                        <tr class="border-b dark:border-slate-800 border-slate-200 text-xs uppercase tracking-wider dark:text-slate-300 text-slate-600 dark:bg-slate-900 bg-slate-100 font-semibold">
+                            <th class="py-3 px-4 rounded-l-xl">Model</th>
+                            <th class="py-3 px-4">Provider</th>
+                            <th class="py-3 px-4">Context Limit</th>
+                            <th class="py-3 px-4">Input / 1M</th>
+                            <th class="py-3 px-4">Output / 1M</th>
+                            <th class="py-3 px-4">1 API Request</th>
+                            <th class="py-3 px-4 rounded-r-xl">100k Production Batch</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonTableBody" class="divide-y dark:divide-slate-800 divide-slate-200 font-mono text-xs">
+                        <!-- Populated via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer with Legal Modal Links -->
+    <footer class="border-t dark:border-slate-800 border-slate-200 dark:bg-slate-900 bg-white py-8 mt-12 transition-colors">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4 text-xs dark:text-slate-400 text-slate-500">
+            <div>
+                <p class="font-medium dark:text-slate-300 text-slate-700">© 2026 TokenCost.ai. Client-side browser calculation engine.</p>
+                <p class="text-[11px] dark:text-slate-500 text-slate-400 mt-0.5">Not affiliated with OpenAI, Anthropic, Google, or DeepSeek. Contact support: <a href="mailto:d4011075@gmail.com" class="text-blue-500 hover:underline">d4011075@gmail.com</a></p>
+            </div>
+            
+            <div class="flex items-center space-x-4 font-medium dark:text-slate-300 text-slate-600">
+                <button onclick="openModal('privacyModal')" class="hover:underline hover:text-blue-500">Privacy Policy</button>
+                <span>•</span>
+                <button onclick="openModal('termsModal')" class="hover:underline hover:text-blue-500">Terms of Service</button>
+                <span>•</span>
+                <button onclick="openModal('contactModal')" class="hover:underline hover:text-blue-500">Contact Us</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Legal Policy Overlays -->
+    <div id="privacyModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden p-4 backdrop-blur-sm">
+        <div class="glass-card dark:bg-slate-900 bg-white p-6 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto space-y-4 border dark:border-slate-800 border-slate-200">
+            <div class="flex justify-between items-center border-b dark:border-slate-800 border-slate-200 pb-3">
+                <h3 class="text-base font-bold dark:text-white text-slate-900">Privacy Policy</h3>
+                <button onclick="closeModal('privacyModal')" class="text-slate-400 hover:text-slate-900 dark:hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="text-xs dark:text-slate-200 text-slate-700 space-y-3 leading-relaxed">
+                <p>At TokenCost.ai, one of our main priorities is the privacy of our visitors. All token calculation, document parsing, and file handling happen 100% locally in your web browser. No prompt content or files leave your device.</p>
+                <p><strong>Log Files & Analytics:</strong> Standard non-identifying web analytics may log IP address, browser type, referring pages, and timestamp to analyze traffic trends and prevent server abuse.</p>
+                <p>For any privacy-related inquiries, reach us at <a href="mailto:d4011075@gmail.com" class="text-blue-500 underline">d4011075@gmail.com</a>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terms Modal -->
+    <div id="termsModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden p-4 backdrop-blur-sm">
+        <div class="glass-card dark:bg-slate-900 bg-white p-6 rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto space-y-4 border dark:border-slate-800 border-slate-200">
+            <div class="flex justify-between items-center border-b dark:border-slate-800 border-slate-200 pb-3">
+                <h3 class="text-base font-bold dark:text-white text-slate-900">Terms of Service</h3>
+                <button onclick="closeModal('termsModal')" class="text-slate-400 hover:text-slate-900 dark:hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="text-xs dark:text-slate-200 text-slate-700 space-y-3 leading-relaxed">
+                <p>By accessing TokenCost.ai, you agree to be bound by these website Terms and Conditions of Use.</p>
+                <p><strong>Disclaimer:</strong> Pricing estimates are calculated based on publicly available provider rate cards (OpenAI, Anthropic, Google, DeepSeek). Actual API billing may vary slightly depending on specialized system headers, custom tokenizers, or provider pricing updates.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center hidden p-4 backdrop-blur-sm">
+        <div class="glass-card dark:bg-slate-900 bg-white p-6 rounded-2xl max-w-md w-full space-y-4 border dark:border-slate-800 border-slate-200">
+            <div class="flex justify-between items-center border-b dark:border-slate-800 border-slate-200 pb-3">
+                <h3 class="text-base font-bold dark:text-white text-slate-900">Contact Us</h3>
+                <button onclick="closeModal('contactModal')" class="text-slate-400 hover:text-slate-900 dark:hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs dark:text-slate-200 text-slate-700">Have feedback, discovered a pricing update, or want to suggest a new AI model?</p>
+            <div class="dark:bg-slate-800 bg-slate-100 p-3 rounded-xl border dark:border-slate-700 border-slate-300 text-xs font-mono text-blue-600 dark:text-blue-400 font-semibold text-center select-all">
+                d4011075@gmail.com
+            </div>
+            <div class="text-center pt-1">
+                <a href="mailto:d4011075@gmail.com" class="inline-flex items-center space-x-2 text-xs bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded-xl transition">
+                    <i data-lucide="mail" class="w-3.5 h-3.5"></i>
+                    <span>Send Email Directly</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Logic Script -->
+    <script>
+        // PDF.js Worker Config
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // 2026 Models Database (Pricing per 1M tokens USD)
+        const MODELS = {
+            'gpt-4o': { name: 'GPT-4o', provider: 'OpenAI', context: 128000, inputPrice: 2.50, outputPrice: 10.00, encoding: 'cl100k_base' },
+            'gpt-4o-mini': { name: 'GPT-4o Mini', provider: 'OpenAI', context: 128000, inputPrice: 0.15, outputPrice: 0.60, encoding: 'cl100k_base' },
+            'o1': { name: 'o1 (Reasoning)', provider: 'OpenAI', context: 200000, inputPrice: 15.00, outputPrice: 60.00, encoding: 'o200k_base' },
+            'o3-mini': { name: 'o3-mini', provider: 'OpenAI', context: 200000, inputPrice: 1.10, outputPrice: 4.40, encoding: 'o200k_base' },
+            'claude-3-5-sonnet': { name: 'Claude 3.5 Sonnet', provider: 'Anthropic', context: 200000, inputPrice: 3.00, outputPrice: 15.00, encoding: 'cl100k_base' },
+            'claude-3-5-haiku': { name: 'Claude 3.5 Haiku', provider: 'Anthropic', context: 200000, inputPrice: 0.80, outputPrice: 4.00, encoding: 'cl100k_base' },
+            'claude-3-opus': { name: 'Claude 3 Opus', provider: 'Anthropic', context: 200000, inputPrice: 15.00, outputPrice: 75.00, encoding: 'cl100k_base' },
+            'gemini-1-5-pro': { name: 'Gemini 1.5 Pro', provider: 'Google', context: 2000000, inputPrice: 1.25, outputPrice: 5.00, encoding: 'cl100k_base' },
+            'gemini-1-5-flash': { name: 'Gemini 1.5 Flash', provider: 'Google', context: 1000000, inputPrice: 0.075, outputPrice: 0.30, encoding: 'cl100k_base' },
+            'gemini-2-0-flash': { name: 'Gemini 2.0 Flash', provider: 'Google', context: 1000000, inputPrice: 0.10, outputPrice: 0.40, encoding: 'cl100k_base' },
+            'deepseek-v3': { name: 'DeepSeek V3', provider: 'DeepSeek', context: 64000, inputPrice: 0.14, outputPrice: 0.28, encoding: 'cl100k_base' },
+            'deepseek-r1': { name: 'DeepSeek R1', provider: 'DeepSeek', context: 64000, inputPrice: 0.55, outputPrice: 2.19, encoding: 'cl100k_base' },
+        };
+
+        const SAMPLE_PRESETS = {
+            short: "Summarize this request into three executive bullet points.",
+            article: "Large Language Models (LLMs) continue to advance rapidly in context window capacity, efficiency, and reasoning performance...",
+            codebase: Array(20).fill("function computeTokens(text) { return Math.ceil(text.length / 4); }").join("\n\n"),
+            book: Array(200).fill("Chapter 1: The Evolution of Machine Learning Architectures and Transformers...").join("\n\n")
+        };
+
+        // Tiktoken Encoder Instance Cache
+        let tiktokenEncoder = null;
+
+        // Init App
+        window.onload = function() {
+            if (window.lucide) lucide.createIcons();
+            initTiktoken();
+            populateModelSelect();
+            parseQueryParams();
+            calculateAll();
+        };
+
+        // Theme Toggle
+        function toggleTheme() {
+            var isDark = document.documentElement.classList.toggle('dark');
+            try {
+                localStorage.setItem('tokencost_theme', isDark ? 'dark' : 'light');
+            } catch(e) {}
+            if (window.lucide) {
+                lucide.createIcons();
+            }
+        }
+
+        // Tiktoken Initialization with safe fallback
+        function initTiktoken() {
+            try {
+                if (window.jsTiktoken && typeof window.jsTiktoken.getEncoding === 'function') {
+                    tiktokenEncoder = window.jsTiktoken.getEncoding("cl100k_base");
+                    document.getElementById('tokenizerEngineBadge').textContent = "Tiktoken Native";
+                    return;
+                }
+            } catch (err) {
+                console.warn("Tiktoken native load fallback:", err);
+            }
+            document.getElementById('tokenizerEngineBadge').textContent = "Standard Engine";
+        }
+
+        // Modal Controls
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // Populate Dropdown
+        function populateModelSelect() {
+            const select = document.getElementById('modelSelect');
+            select.innerHTML = '';
+            for (const [key, model] of Object.entries(MODELS)) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = `${model.provider} — ${model.name}`;
+                if (key === 'gpt-4o') opt.selected = true;
+                select.appendChild(opt);
+            }
+        }
+
+        // Calculate Tokens
+        function calculateTokenCount(text) {
+            if (!text) return 0;
+            if (tiktokenEncoder) {
+                try {
+                    return tiktokenEncoder.encode(text).length;
+                } catch (e) {
+                    return Math.ceil(text.length / 4);
+                }
+            }
+            return Math.ceil(text.length / 4);
+        }
+
+        // Input Handlers
+        function onTextInput() {
+            const text = document.getElementById('promptInput').value;
+            document.getElementById('charCount').textContent = text.length.toLocaleString();
+            document.getElementById('wordCount').textContent = (text.trim() ? text.trim().split(/\s+/).length : 0).toLocaleString();
+
+            const tokenCount = calculateTokenCount(text);
+            document.getElementById('inputTokenOverride').value = tokenCount;
+
+            calculateAll();
+        }
+
+        function onManualTokenInput() {
+            calculateAll();
+        }
+
+        function loadPreset(key) {
+            if (SAMPLE_PRESETS[key]) {
+                document.getElementById('promptInput').value = SAMPLE_PRESETS[key];
+                onTextInput();
+            }
+        }
+
+        // File Drag & Drop Parsing
+        function handleDragOver(e) { e.preventDefault(); document.getElementById('dropZone').classList.add('drag-over'); }
+        function handleDragLeave(e) { e.preventDefault(); document.getElementById('dropZone').classList.remove('drag-over'); }
+        function handleFileDrop(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('drag-over');
+            if (e.dataTransfer.files.length > 0) processFile(e.dataTransfer.files[0]);
+        }
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) processFile(e.target.files[0]);
+        }
+
+        function processFile(file) {
+            const name = file.name.toLowerCase();
+            if (name.endsWith('.pdf')) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const typedarray = new Uint8Array(ev.target.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                        let textContent = '';
+                        let countPromises = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            countPromises.push(pdf.getPage(i).then(page => page.getTextContent().then(tc => {
+                                tc.items.forEach(item => textContent += item.str + ' ');
+                            })));
+                        }
+                        Promise.all(countPromises).then(() => {
+                            document.getElementById('promptInput').value = textContent;
+                            onTextInput();
+                            showToast(`Parsed PDF: ${file.name}`);
+                        });
+                    }).catch(err => showToast("Error parsing PDF file"));
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('promptInput').value = e.target.result;
+                    onTextInput();
+                    showToast(`Loaded ${file.name}`);
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Main Calculation Engine
+        function calculateAll() {
+            const selectedKey = document.getElementById('modelSelect').value;
+            const model = MODELS[selectedKey] || MODELS['gpt-4o'];
+
+            let inputTokens = parseInt(document.getElementById('inputTokenOverride').value) || 0;
+            const outputTokens = parseInt(document.getElementById('outputTokenInput').value) || 0;
+            const imageCount = parseInt(document.getElementById('imageCount').value) || 0;
+
+            inputTokens += (imageCount * 1600);
+
+            // Update Specs
+            document.getElementById('specContext').textContent = formatNumber(model.context);
+            document.getElementById('specInputPrice').textContent = `$${model.inputPrice.toFixed(2)}`;
+            document.getElementById('specOutputPrice').textContent = `$${model.outputPrice.toFixed(2)}`;
+
+            // Single Run Calculations
+            const inputCost = (inputTokens / 1000000) * model.inputPrice;
+            const outputCost = (outputTokens / 1000000) * model.outputPrice;
+            const singleRunTotal = inputCost + outputCost;
+
+            document.getElementById('singleRunCost').textContent = `$${singleRunTotal.toFixed(6)}`;
+            document.getElementById('summaryInputTokenCount').textContent = inputTokens.toLocaleString();
+            document.getElementById('summaryOutputTokenCount').textContent = outputTokens.toLocaleString();
+            document.getElementById('summaryInputCost').textContent = `$${inputCost.toFixed(6)}`;
+            document.getElementById('summaryOutputCost').textContent = `$${outputCost.toFixed(6)}`;
+
+            // Context Gauge
+            const usedContext = inputTokens + outputTokens;
+            const pct = Math.min(100, (usedContext / model.context) * 100);
+            
+            document.getElementById('usedTokensText').textContent = usedContext.toLocaleString();
+            document.getElementById('totalContextText').textContent = model.context.toLocaleString();
+            document.getElementById('contextPercentText').textContent = `${pct.toFixed(1)}%`;
+            document.getElementById('contextProgressBar').style.width = `${pct}%`;
+
+            const badge = document.getElementById('contextBadge');
+            const statusMsg = document.getElementById('contextStatusMessage');
+
+            if (pct >= 100) {
+                badge.className = "px-2 py-0.5 text-[11px] rounded-full font-semibold bg-red-500/20 text-red-400 border border-red-500/30";
+                badge.textContent = "Exceeded Capacity";
+                statusMsg.textContent = "Warning: Prompt exceeds this model's context window limit!";
+            } else if (pct >= 75) {
+                badge.className = "px-2 py-0.5 text-[11px] rounded-full font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+                badge.textContent = "Near Capacity";
+                statusMsg.textContent = "Caution: Prompt uses over 75% of available context window.";
+            } else {
+                badge.className = "px-2 py-0.5 text-[11px] rounded-full font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+                badge.textContent = "Safe Usage";
+                statusMsg.textContent = "Your prompt comfortably fits within this model's maximum limit.";
+            }
+
+            // Production Multi-Run Batch Calculations
+            document.getElementById('cost1k').textContent = `$${(singleRunTotal * 1000).toFixed(2)}`;
+            document.getElementById('cost10k').textContent = `$${(singleRunTotal * 10000).toFixed(2)}`;
+            document.getElementById('cost100k').textContent = `$${(singleRunTotal * 100000).toFixed(2)}`;
+
+            const customBatchRuns = parseInt(document.getElementById('customBatchInput').value) || 1;
+            document.getElementById('customBatchLabel').textContent = `(${formatNumber(customBatchRuns)})`;
+            document.getElementById('costCustom').textContent = `$${(singleRunTotal * customBatchRuns).toFixed(2)}`;
+
+            renderComparisonTable(inputTokens, outputTokens, selectedKey);
+        }
+
+        // Render Matrix Table
+        function renderComparisonTable(inputTokens, outputTokens, selectedKey) {
+            const tbody = document.getElementById('comparisonTableBody');
+            tbody.innerHTML = '';
+
+            document.getElementById('matrixInputTokens').textContent = inputTokens.toLocaleString();
+            document.getElementById('matrixOutputTokens').textContent = outputTokens.toLocaleString();
+
+            for (const [key, model] of Object.entries(MODELS)) {
+                const tr = document.createElement('tr');
+                const isSelected = key === selectedKey;
+                
+                tr.className = isSelected 
+                    ? "dark:bg-blue-950/50 bg-blue-50/80 border-l-2 border-l-blue-500 dark:hover:bg-blue-900/40 hover:bg-blue-100/60 transition" 
+                    : "dark:hover:bg-slate-900/60 hover:bg-slate-100 transition";
+
+                const inCost = (inputTokens / 1000000) * model.inputPrice;
+                const outCost = (outputTokens / 1000000) * model.outputPrice;
+                const totalSingle = inCost + outCost;
+                const total100k = totalSingle * 100000;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-semibold flex items-center space-x-1.5 dark:text-white text-slate-900">
+                        <span>${model.name}</span>
+                        ${isSelected ? '<span class="text-[9px] bg-blue-500/20 text-blue-600 dark:text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/30 font-bold">Active</span>' : ''}
+                    </td>
+                    <td class="py-3 px-4 dark:text-slate-300 text-slate-600 font-sans">${model.provider}</td>
+                    <td class="py-3 px-4 dark:text-slate-200 text-slate-800">${formatNumber(model.context)}</td>
+                    <td class="py-3 px-4 dark:text-slate-200 text-slate-800">$${model.inputPrice.toFixed(2)}</td>
+                    <td class="py-3 px-4 dark:text-slate-200 text-slate-800">$${model.outputPrice.toFixed(2)}</td>
+                    <td class="py-3 px-4 font-bold dark:text-white text-slate-900">$${totalSingle.toFixed(6)}</td>
+                    <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">$${total100k.toFixed(2)}</td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000) + 'M';
+            if (num >= 1000) return (num / 1000) + 'k';
+            return num;
+        }
+
+        // Export Report Function
+        function exportReport(format) {
+            const modelKey = document.getElementById('modelSelect').value;
+            const model = MODELS[modelKey];
+            const data = {
+                timestamp: new Date().toISOString(),
+                model: model.name,
+                provider: model.provider,
+                inputTokens: document.getElementById('summaryInputTokenCount').textContent,
+                outputTokens: document.getElementById('summaryOutputTokenCount').textContent,
+                singleRunCostUSD: document.getElementById('singleRunCost').textContent,
+                batch100kCostUSD: document.getElementById('cost100k').textContent
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `tokencost-report-${modelKey}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("Exported calculation report!");
+        }
+
+        // Share Link Params
+        function copyShareableLink() {
+            const model = document.getElementById('modelSelect').value;
+            const inTok = document.getElementById('inputTokenOverride').value;
+            const outTok = document.getElementById('outputTokenInput').value;
+            
+            const shareUrl = `${window.location.origin}${window.location.pathname}?model=${model}&in=${inTok}&out=${outTok}`;
+            
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = shareUrl;
+            dummy.select();
+            document.execCommand("copy");
+            document.body.removeChild(dummy);
+
+            showToast("Shareable link copied to clipboard!");
+        }
+
+        function parseQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('model') && MODELS[params.get('model')]) {
+                document.getElementById('modelSelect').value = params.get('model');
+            }
+            if (params.has('in')) {
+                document.getElementById('inputTokenOverride').value = params.get('in');
+            }
+            if (params.has('out')) {
+                document.getElementById('outputTokenInput').value = params.get('out');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
