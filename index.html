@@ -528,34 +528,35 @@
 
     </main>
 <!-- Developer FAQ & Token Guide Section (AdSense Content Anchor) -->
-<section style="max-width: 900px; margin: 4rem auto 2rem; padding: 0 1rem; color: #cbd5e1; line-height: 1.7; font-family: system-ui, -apple-system, sans-serif;">
-  <h2 style="color: #ffffff; border-bottom: 2px solid #334155; padding-bottom: 0.5rem; font-size: 1.5rem; font-weight: 700;">
+<!-- Developer FAQ & Token Guide Section (Tailwind Light/Dark Mode) -->
+<section class="max-w-4xl mx-auto my-12 px-4 text-slate-700 dark:text-slate-300 leading-relaxed font-sans transition-colors">
+  <h2 class="text-2xl font-bold text-slate-900 dark:text-white border-b-2 border-slate-200 dark:border-slate-800 pb-2">
     Frequently Asked Questions & LLM Token Pricing Guide
   </h2>
   
-  <article style="margin-top: 1.75rem;">
-    <h3 style="color: #818cf8; font-size: 1.15rem; margin-bottom: 0.5rem;">What is an AI Token and how is it calculated?</h3>
-    <p>A token is the fundamental building block that Large Language Models (LLMs) such as GPT-4o, Claude 3.5 Sonnet, and DeepSeek R1 use to process text. In general English text, 1 token is equivalent to roughly 4 characters or 0.75 words. However, code snippets, whitespace, JSON keys, and non-English languages often require a higher token-to-character ratio due to specialized tokenizer vocabularies (like Byte-Pair Encoding).</p>
+  <article class="mt-6">
+    <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">What is an AI Token and how is it calculated?</h3>
+    <p class="text-slate-600 dark:text-slate-400">A token is the fundamental building block that Large Language Models (LLMs) such as GPT-4o, Claude 3.5 Sonnet, and DeepSeek R1 use to process text. In general English text, 1 token is equivalent to roughly 4 characters or 0.75 words. However, code snippets, whitespace, JSON keys, and non-English languages often require a higher token-to-character ratio due to specialized tokenizer vocabularies (like Byte-Pair Encoding).</p>
   </article>
 
-  <article style="margin-top: 1.75rem;">
-    <h3 style="color: #818cf8; font-size: 1.15rem; margin-bottom: 0.5rem;">Why do Input and Output tokens have different prices?</h3>
-    <p>AI providers (such as OpenAI, Anthropic, Google, and DeepSeek) charge significantly different rates for prompt input versus model output. Input tokens require the model to read and evaluate existing context in parallel compute batches. Output tokens require sequential, auto-regressive generation, where every single word must be calculated based on all previous tokens. Consequently, output tokens typically cost 3x to 4x more than input tokens across almost all provider tiers.</p>
+  <article class="mt-6">
+    <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">Why do Input and Output tokens have different prices?</h3>
+    <p class="text-slate-600 dark:text-slate-400">AI providers (such as OpenAI, Anthropic, Google, and DeepSeek) charge significantly different rates for prompt input versus model output. Input tokens require the model to read and evaluate existing context in parallel compute batches. Output tokens require sequential, auto-regressive generation, where every single word must be calculated based on all previous tokens. Consequently, output tokens typically cost 3x to 4x more than input tokens across almost all provider tiers.</p>
   </article>
 
-  <article style="margin-top: 1.75rem;">
-    <h3 style="color: #818cf8; font-size: 1.15rem; margin-bottom: 0.5rem;">What are Context Windows and why do they matter?</h3>
-    <p>The context window defines the maximum volume of input and output data an AI model can hold in memory during a single request loop. Modern 2026 models feature massive context windows ranging from 64k tokens (DeepSeek V3 / R1), 128k-200k tokens (GPT-4o and Claude 3.5 Sonnet), up to 1M–2M+ tokens (Google Gemini 1.5 Pro and Gemini 2.0 Flash). Exceeding a model's maximum context boundary results in API errors or truncated responses.</p>
+  <article class="mt-6">
+    <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">What are Context Windows and why do they matter?</h3>
+    <p class="text-slate-600 dark:text-slate-400">The context window defines the maximum volume of input and output data an AI model can hold in memory during a single request loop. Modern 2026 models feature massive context windows ranging from 64k tokens (DeepSeek V3 / R1), 128k-200k tokens (GPT-4o and Claude 3.5 Sonnet), up to 1M–2M+ tokens (Google Gemini 1.5 Pro and Gemini 2.0 Flash). Exceeding a model's maximum context boundary results in API errors or truncated responses.</p>
   </article>
 
-  <article style="margin-top: 1.75rem;">
-    <h3 style="color: #818cf8; font-size: 1.15rem; margin-bottom: 0.5rem;">How can developers reduce LLM API operational costs?</h3>
-    <p>To optimize monthly API spending, developers should implement continuous prompt engineering strategies: prune redundant chat history, use prompt caching features available on supported models (like Anthropic and OpenAI), utilize fast cost-effective models (such as Claude 3.5 Haiku or Gemini 2.0 Flash) for routine classification tasks, and switch to heavyweight reasoning models (like DeepSeek R1 or o3-mini) only for complex algorithmic workloads.</p>
+  <article class="mt-6">
+    <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">How can developers reduce LLM API operational costs?</h3>
+    <p class="text-slate-600 dark:text-slate-400">To optimize monthly API spending, developers should implement continuous prompt engineering strategies: prune redundant chat history, use prompt caching features available on supported models (like Anthropic and OpenAI), utilize fast cost-effective models (such as Claude 3.5 Haiku or Gemini 2.0 Flash) for routine classification tasks, and switch to heavyweight reasoning models (like DeepSeek R1 or o3-mini) only for complex algorithmic workloads.</p>
   </article>
 
-  <article style="margin-top: 1.75rem;">
-    <h3 style="color: #818cf8; font-size: 1.15rem; margin-bottom: 0.5rem;">Is my prompt text or document data saved on external servers?</h3>
-    <p>No. TokenCost.ai processes all calculations locally inside your client-side browser engine. Your text inputs, source files, and JSON payloads are never uploaded, logged, or processed on external backend servers, ensuring strict developer data privacy.</p>
+  <article class="mt-6">
+    <h3 class="text-lg font-semibold text-indigo-600 dark:text-indigo-400 mb-2">Is my prompt text or document data saved on external servers?</h3>
+    <p class="text-slate-600 dark:text-slate-400">No. TokenCost.ai processes all calculations locally inside your client-side browser engine. Your text inputs, source files, and JSON payloads are never uploaded, logged, or processed on external backend servers, ensuring strict developer data privacy.</p>
   </article>
 </section>
     <!-- Footer with Legal Modal Links -->
