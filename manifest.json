@@ -1,0 +1,17 @@
+{
+  "name": "TokenCost.ai - AI Token & Cost Estimator",
+  "short_name": "TokenCost",
+  "description": "Calculate token counts and estimate real-time API costs across OpenAI, Anthropic Claude, Gemini, and DeepSeek.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0f19",
+  "theme_color": "#6366f1",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
